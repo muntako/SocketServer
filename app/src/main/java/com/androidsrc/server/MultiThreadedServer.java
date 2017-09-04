@@ -2,6 +2,7 @@ package com.androidsrc.server;
 
 /**
  * Created by ADMIN on 31-Aug-17.
+ *
  */
 
 import java.net.InetAddress;
@@ -10,17 +11,24 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.IOException;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 public class MultiThreadedServer implements Runnable{
 
-    protected int          serverPort   = 8080;
+    protected int          serverPort   = 9000;
     protected ServerSocket serverSocket = null;
     protected boolean      isStopped    = false;
     protected Thread       runningThread= null;
+    List<String> list = new ArrayList<>();
 
     public MultiThreadedServer(int port){
         this.serverPort = port;
+    }
+
+    public int getServerPort() {
+        return serverPort;
     }
 
     public void run(){
@@ -42,7 +50,7 @@ public class MultiThreadedServer implements Runnable{
             }
             new Thread(
                     new WorkerRunnable(
-                            clientSocket, "Multithreaded Server")
+                            clientSocket, "Multithreaded Server",list)
             ).start();
         }
         System.out.println("Server Stopped.") ;
@@ -100,5 +108,23 @@ public class MultiThreadedServer implements Runnable{
         return ip;
     }
 
+    public void onDestroy() {
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
 
+
+    public List<String> getList() {
+        return list;
+    }
+
+    public void setList(List<String> list) {
+        this.list = list;
+    }
 }

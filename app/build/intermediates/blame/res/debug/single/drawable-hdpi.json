@@ -1,5 +1,9 @@
 [
     {
+        "merged": "D:\\easysoft\\SocketServer\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi\\ic_contact.png",
+        "source": "D:\\easysoft\\SocketServer\\app\\build\\generated\\res\\pngs\\debug\\drawable-hdpi\\ic_contact.png"
+    },
+    {
         "merged": "D:\\home\\easysoft\\AndroidStudioProjects\\github\\SocketServer\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi\\ic_launcher.png",
         "source": "D:\\home\\easysoft\\AndroidStudioProjects\\github\\SocketServer\\app\\src\\main\\res\\drawable-hdpi\\ic_launcher.png"
     },

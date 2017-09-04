@@ -15,6 +15,8 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
 
 public class Server {
@@ -46,43 +48,6 @@ public class Server {
             }
         }
     }
-//
-//	private class SocketServerThread extends Thread {
-//
-//		int count = 0;
-//
-//		@Override
-//		public void run() {
-//			try {
-//				serverSocket = new ServerSocket(socketServerPORT);
-//
-//				while (true) {
-//					Socket socket = serverSocket.accept();
-//					count++;
-//					message += "#" + count + " from "
-//							+ socket.getInetAddress() + ":"
-//							+ socket.getPort() + "\n";
-//
-//					activity.runOnUiThread(new Runnable() {
-//
-//						@Override
-//						public void run() {
-//							activity.msg.setText(message);
-//						}
-//					});
-//
-////					SocketServerFirstReplyThread socketServerFirstReplyThread = new SocketServerFirstReplyThread(
-////							socket, count);
-////					socketServerFirstReplyThread.run();
-//					SocketServerReplyThread socketReplyThread = new SocketServerReplyThread(socket,message);
-//					socketReplyThread.run();		}
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		}
-//
-//	}
 
     private class SocketServerThread extends Thread {
 
@@ -98,8 +63,9 @@ public class Server {
                 if (serverSocket==null)
                     serverSocket = new ServerSocket(socketServerPORT);
 
-                while (true) {
-                    socket = serverSocket.accept();
+                socket = serverSocket.accept();
+                while (!socket.isClosed()) {
+                    Log.i(TAG,"Still running");
                     dataInputStream = new DataInputStream(
                             socket.getInputStream());
                     dataOutputStream = new DataOutputStream(
@@ -112,6 +78,10 @@ public class Server {
 
                     final JSONObject jsondata;
                     jsondata = new JSONObject(messageFromClient);
+                    long time = System.currentTimeMillis();
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd MM yyyy HH:mm");
+                    Date resultdate = new Date(time);
+                    String dateTime = sdf.format(resultdate);
 
                     try {
                         request = jsondata.getString("request");
@@ -119,111 +89,33 @@ public class Server {
 
                             @Override
                             public void run() {
-                                activity.msg.setText("request dari client :" + request);
+                                activity.msg.setText("request dari client :" + messageFromClient);
                             }
                         });
-                        if (request.equals(REQUEST_CONNECT_CLIENT)) {
-                            messageToClient = "Connection Accepted";
-                            dataOutputStream.writeUTF(messageToClient);
-                        }else if(request.equals(SEND_MESSAGE_CLIENT)){
-                            // There might be other queries, but as of now nothing.
-                            String message = jsondata.getString("message");
-                            messageToClient = "Connection Accepted, Server accept message "+ message;
-                            dataOutputStream.writeUTF(messageToClient);
+                        if (messageFromClient.contains(REQUEST_CONNECT_CLIENT)) {
+                            messageToClient = "Connection Accepted\n" + dateTime;
                         } else {
-                            // There might be other queries, but as of now nothing.
-                            messageToClient = "Connection Accepted, Server accept request "+ request;
-                            dataOutputStream.writeUTF(messageToClient);
+                            messageToClient = "request Accepted\n" +messageFromClient+"\n"+ dateTime;
                         }
+                        dataOutputStream.writeUTF(messageToClient);
+                        Log.i(TAG,"--Server response :" + messageToClient);
                     } catch (JSONException e) {
                         e.printStackTrace();
                         Log.e(TAG, "Unable to get request");
                         dataOutputStream.flush();
                     } catch (IOException e) {
                         e.printStackTrace();
+                        Log.e(TAG,e.toString());
                     }
                 }
 
-            } catch (JSONException | IOException e) {
-                e.printStackTrace();
+            }catch (Exception e){
+                Log.e(TAG,e.toString());
             }
-//            finally {
-//                if (socket != null) {
-//                    try {
-//                        socket.close();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//
-//                if (dataInputStream != null) {
-//                    try {
-//                        dataInputStream.close();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//
-//                if (dataOutputStream != null) {
-//                    try {
-//                        dataOutputStream.close();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-
         }
 
     }
 
-    private class SocketServerFirstReplyThread extends Thread {
-
-        private Socket hostThreadSocket;
-        int cnt;
-
-        SocketServerFirstReplyThread(Socket socket, int c) {
-            hostThreadSocket = socket;
-            cnt = c;
-        }
-
-        @Override
-        public void run() {
-            OutputStream outputStream;
-            String msgReply = "Hello from Server, you are #" + cnt;
-
-            try {
-                outputStream = hostThreadSocket.getOutputStream();
-                PrintStream printStream = new PrintStream(outputStream);
-                printStream.print(msgReply);
-                printStream.close();
-
-                message += "replayed: " + msgReply + "\n";
-
-                activity.runOnUiThread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        activity.msg.setText(message);
-                    }
-                });
-
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                message += "Something wrong! " + e.toString() + "\n";
-            }
-
-            activity.runOnUiThread(new Runnable() {
-
-                @Override
-                public void run() {
-                    activity.msg.setText(message);
-                }
-            });
-        }
-
-    }
 
 
     public String getIpAddress() {

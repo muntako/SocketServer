@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="console-0.4.1">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.android/build-cache/54d5d520ebf8afbce29536aad73fdd3a7869df18/output/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.android/build-cache/54d5d520ebf8afbce29536aad73fdd3a7869df18/output/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jraska/console/0.4.1/31dd6dad9cd313e5e00ee0d9fdbf748b16499b05/console-0.4.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

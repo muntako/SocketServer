@@ -6,5 +6,9 @@
     {
         "merged": "D:\\easysoft\\SocketServer\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_main.xml",
         "source": "D:\\easysoft\\SocketServer\\app\\src\\main\\res\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "D:\\easysoft\\SocketServer\\app\\build\\intermediates\\res\\merged\\debug\\layout\\console_content.xml",
+        "source": "C:\\Users\\ADMIN\\.android\\build-cache\\54d5d520ebf8afbce29536aad73fdd3a7869df18\\output\\res\\layout\\console_content.xml"
     }
 ]

@@ -1,5 +1,9 @@
 [
     {
+        "merged": "D:\\easysoft\\SocketServer\\app\\build\\intermediates\\res\\merged\\debug\\drawable-mdpi\\ic_contact.png",
+        "source": "D:\\easysoft\\SocketServer\\app\\build\\generated\\res\\pngs\\debug\\drawable-mdpi\\ic_contact.png"
+    },
+    {
         "merged": "D:\\easysoft\\SocketServer\\app\\build\\intermediates\\res\\merged\\debug\\drawable-mdpi\\ic_launcher.png",
         "source": "D:\\easysoft\\SocketServer\\app\\src\\main\\res\\drawable-mdpi\\ic_launcher.png"
     },

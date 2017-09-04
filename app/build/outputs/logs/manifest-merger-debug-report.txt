@@ -17,6 +17,7 @@ ADDED from D:\easysoft\SocketServer\app\src\main\AndroidManifest.xml:2:1-28:12
 		ADDED from D:\easysoft\SocketServer\app\src\main\AndroidManifest.xml:2:11-69
 uses-sdk
 ADDED from D:\easysoft\SocketServer\app\src\main\AndroidManifest.xml:7:5-9:41
+MERGED from [com.jraska:console:0.4.1] C:\Users\ADMIN\.android\build-cache\54d5d520ebf8afbce29536aad73fdd3a7869df18\output\AndroidManifest.xml:8:5-10:41
 	android:targetSdkVersion
 		ADDED from D:\easysoft\SocketServer\app\src\main\AndroidManifest.xml:9:9-38
 		INJECTED from D:\easysoft\SocketServer\app\src\main\AndroidManifest.xml

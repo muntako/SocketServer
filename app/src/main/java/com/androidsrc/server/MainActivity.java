@@ -18,7 +18,8 @@ import static android.content.ContentValues.TAG;
 
 public class MainActivity extends Activity {
 
-	Server server;
+	MultiThreadedServer server;
+//	Server server;
 	TextView infoip, msg;
 	Handler updateConversationHandler;
 
@@ -28,8 +29,10 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		infoip = (TextView) findViewById(R.id.infoip);
 		msg = (TextView) findViewById(R.id.msg);
-		server = new Server(this);
-		infoip.setText(server.getIpAddress()+":"+server.getPort()+"\n");
+//		server = new Server(this);
+		server = new MultiThreadedServer(8080);
+		new Thread(server).start();
+		infoip.setText(server.getIpAddress()+":"+server.getServerPort()+"\n");
 
 	}
 
