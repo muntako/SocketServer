@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 25
     buildToolsVersion "25.0.2"
 
     defaultConfig {
         applicationId "com.androidsrc.server"
         minSdkVersion 19
-        targetSdkVersion 19
+        targetSdkVersion 25
     }
 
     buildTypes {
@@ -19,6 +19,7 @@ android {
 }
 
 dependencies {
-    compile 'com.jraska:console:0.4.1'
+    compile 'com.vaadin.external.json:json:0.0.20080701'
+
 }
 

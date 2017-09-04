@@ -23,6 +23,7 @@ public class MultiThreadedServer implements Runnable{
     protected Thread       runningThread= null;
     List<String> list = new ArrayList<>();
 
+
     public MultiThreadedServer(int port){
         this.serverPort = port;
     }
@@ -55,6 +56,9 @@ public class MultiThreadedServer implements Runnable{
         }
         System.out.println("Server Stopped.") ;
     }
+
+
+
 
 
     private synchronized boolean isStopped() {

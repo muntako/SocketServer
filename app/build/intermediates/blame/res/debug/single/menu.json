@@ -1,9 +1,5 @@
 [
     {
-        "merged": "D:\\home\\easysoft\\AndroidStudioProjects\\github\\SocketServer\\app\\build\\intermediates\\res\\merged\\debug\\menu\\main.xml",
-        "source": "D:\\home\\easysoft\\AndroidStudioProjects\\github\\SocketServer\\app\\src\\main\\res\\menu\\main.xml"
-    },
-    {
         "merged": "D:\\easysoft\\SocketServer\\app\\build\\intermediates\\res\\merged\\debug\\menu\\main.xml",
         "source": "D:\\easysoft\\SocketServer\\app\\src\\main\\res\\menu\\main.xml"
     }

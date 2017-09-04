@@ -2,9 +2,10 @@ package com.androidsrc.server;
 
 /**
  * Created by ADMIN on 31-Aug-17.
- *
  */
 
+
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.DataInputStream;
@@ -22,21 +23,22 @@ import java.util.Locale;
 /**
 
  */
-public class WorkerRunnable implements Runnable{
+public class WorkerRunnable implements Runnable {
 
     private static final String REQUEST_CONNECT_CLIENT = "request-connect-client";
     public static final String SEND_MESSAGE_CLIENT = "send-message-client";
 
     private Socket clientSocket = null;
-    private String serverText   = null;
-    List<String> connected ;
+    private String serverText = null;
+    List<String> connected;
+
 
     public WorkerRunnable() {
     }
 
     public WorkerRunnable(Socket clientSocket, String serverText, List<String> connected) {
         this.clientSocket = clientSocket;
-        this.serverText   = serverText;
+        this.serverText = serverText;
         this.connected = connected;
     }
 
@@ -46,13 +48,13 @@ public class WorkerRunnable implements Runnable{
 //        connected = new ArrayList<>();
         while (!clientSocket.isClosed()) {
             try {
-                if (!connected.contains(clientSocket.getRemoteSocketAddress().toString())){
+                if (!connected.contains(clientSocket.getRemoteSocketAddress().toString())) {
                     addConnected(clientSocket.getRemoteSocketAddress().toString());
                 }
-                if (connected.size()>1){
+                if (connected.size() > 1) {
 
                 }
-                System.out.println("client connected "+connected);
+                System.out.println("client connected " + connected);
                 InputStream input = clientSocket.getInputStream();
                 OutputStream output = clientSocket.getOutputStream();
 
@@ -66,7 +68,16 @@ public class WorkerRunnable implements Runnable{
                 //If no message sent from client, this code will block the program
                 messageFromClient = dataInputStream.readUTF();
 
-                final JSONObject jsondata;
+                final JSONObject jsondata =null;
+
+                try {
+                    String tes = jsondata.getString("request");
+                    System.out.print(tes);
+
+                } catch (JSONException e) {
+
+                    e.printStackTrace();
+                }
 
                 long time = System.currentTimeMillis();
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm dd-MM-yyyy", Locale.getDefault());
@@ -77,7 +88,7 @@ public class WorkerRunnable implements Runnable{
                 if (messageFromClient.contains(REQUEST_CONNECT_CLIENT)) {
                     messageToClient = "Connection Accepted\n" + dateTime;
                 } else {
-                    messageToClient = "request Accepted\n" +messageFromClient+"\n"+ dateTime+"\n"+connected;
+                    messageToClient = "request Accepted\n" + messageFromClient + "\n" + dateTime + "\n" + connected;
                 }
 
                 dataOutputStream.writeUTF(messageToClient);
@@ -89,7 +100,7 @@ public class WorkerRunnable implements Runnable{
                 e.printStackTrace();
                 System.out.println("IOException " + e);
                 try {
-                    if (clientSocket!=null)
+                    if (clientSocket != null)
                         clientSocket.close();
                 } catch (IOException e1) {
                     e1.printStackTrace();
