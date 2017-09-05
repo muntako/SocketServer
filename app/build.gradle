@@ -19,7 +19,7 @@ android {
 }
 
 dependencies {
-    compile 'com.vaadin.external.json:json:0.0.20080701'
-
+    compile 'com.alibaba:fastjson:1.2.37'
+    compile 'com.google.code.gson:gson:2.8.1'
 }
 

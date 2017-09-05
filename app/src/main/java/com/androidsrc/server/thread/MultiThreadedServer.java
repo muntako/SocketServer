@@ -1,9 +1,10 @@
-package com.androidsrc.server;
+package com.androidsrc.server.thread;
 
 /**
  * Created by ADMIN on 31-Aug-17.
- *
  */
+
+import com.androidsrc.server.model.RequestClient;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -13,18 +14,21 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class MultiThreadedServer implements Runnable{
+public class MultiThreadedServer implements Runnable,ManageUser.forwardMessage {
 
-    protected int          serverPort   = 9000;
-    protected ServerSocket serverSocket = null;
-    protected boolean      isStopped    = false;
-    protected Thread       runningThread= null;
-    List<String> list = new ArrayList<>();
+    private int serverPort = 9000;
+    private ServerSocket serverSocket = null;
+    private boolean isStopped = false;
+    private Thread runningThread = null;
+
+    private Map<String,ManageUser> clients = new HashMap<>();
 
 
-    public MultiThreadedServer(int port){
+    public MultiThreadedServer(int port) {
         this.serverPort = port;
     }
 
@@ -32,40 +36,41 @@ public class MultiThreadedServer implements Runnable{
         return serverPort;
     }
 
-    public void run(){
-        synchronized(this){
+    public void run() {
+        synchronized (this) {
             this.runningThread = Thread.currentThread();
         }
         openServerSocket();
-        while(! isStopped()){
+        while (!isStopped()) {
             Socket clientSocket = null;
             try {
                 clientSocket = this.serverSocket.accept();
             } catch (IOException e) {
-                if(isStopped()) {
-                    System.out.println("Server Stopped.") ;
+                if (isStopped()) {
+                    System.out.println("Server Stopped.");
                     return;
                 }
                 throw new RuntimeException(
                         "Error accepting client connection", e);
             }
-            new Thread(
-                    new WorkerRunnable(
-                            clientSocket, "Multithreaded Server",list)
-            ).start();
+            ManageUser client = new ManageUser(clientSocket, "Multithreaded Server");
+            client.setForwardMessage(this);
+            new Thread(client).start();
+            String id = client.getClientSocket().getInetAddress().getHostAddress();
+            if (id!=null)
+                clients.put(id,client);
+
+            System.out.println("clients connected"+clients.toString());
         }
-        System.out.println("Server Stopped.") ;
+        System.out.println("Server Stopped.");
     }
-
-
-
 
 
     private synchronized boolean isStopped() {
         return this.isStopped;
     }
 
-    public synchronized void stop(){
+    public synchronized void stop() {
         this.isStopped = true;
         try {
             this.serverSocket.close();
@@ -77,9 +82,9 @@ public class MultiThreadedServer implements Runnable{
     private void openServerSocket() {
         try {
             this.serverSocket = new ServerSocket(this.serverPort);
-            System.out.print(getIpAddress()+" port "+ serverPort+"\n");
+            System.out.print(getIpAddress() + " port " + serverPort + "\n");
         } catch (IOException e) {
-            throw new RuntimeException("Cannot open port "+serverPort+"\n", e);
+            throw new RuntimeException("Cannot open port " + serverPort + "\n", e);
         }
     }
 
@@ -124,11 +129,15 @@ public class MultiThreadedServer implements Runnable{
     }
 
 
-    public List<String> getList() {
-        return list;
-    }
+    @Override
+    public void onMessageReceived(ManageUser user) {
+        RequestClient requestClient = user.getRequestClient();
+        String destination = requestClient.getDestination();
+        ManageUser us= clients.get(destination);
+        if (us!=null)
+            new Thread(new messageThread(us.getClientSocket(),requestClient)).start();
+        else
+            System.out.println("null");
 
-    public void setList(List<String> list) {
-        this.list = list;
     }
 }

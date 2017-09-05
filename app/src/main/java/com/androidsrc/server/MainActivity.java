@@ -3,18 +3,9 @@ package com.androidsrc.server;
 import android.os.Bundle;
 import android.app.Activity;
 import android.os.Handler;
-import android.util.Log;
 import android.widget.TextView;
 
-import org.json.JSONObject;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-
-import static android.content.ContentValues.TAG;
+import com.androidsrc.server.thread.MultiThreadedServer;
 
 public class MainActivity extends Activity {
 
