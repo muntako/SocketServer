@@ -7,6 +7,7 @@ package com.androidsrc.server.thread;
 
 import com.alibaba.fastjson.JSONPObject;
 import com.androidsrc.server.model.RequestClient;
+import com.androidsrc.server.model.ResponseToClient;
 import com.google.gson.Gson;
 
 import java.io.DataInputStream;
@@ -35,6 +36,10 @@ public class ManageUser implements Runnable {
     private RequestClient requestClient = null;
     private String ipAddress;
 
+
+    DataInputStream dataInputStream = null;
+    DataOutputStream dataOutputStream = null;
+
     interface forwardMessage{
         void onMessageReceived(ManageUser user);
     }
@@ -48,8 +53,6 @@ public class ManageUser implements Runnable {
     }
 
     public void run() {
-        DataInputStream dataInputStream = null;
-        DataOutputStream dataOutputStream = null;
         while (!clientSocket.isClosed()) {
             try {
                 InputStream input = clientSocket.getInputStream();
@@ -60,24 +63,26 @@ public class ManageUser implements Runnable {
                 dataOutputStream = new DataOutputStream(
                         output);
 
-                String messageFromClient, messageToClient = null;
+                String messageFromClient = null, messageToClient = null;
 
                 //If no message sent from client, this code will block the program
-                messageFromClient = dataInputStream.readUTF();
+                try {
+                    if (dataInputStream==null)
+                        return;
+                    messageFromClient = dataInputStream.readUTF();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
 
                 Gson gson = new Gson();
                 requestClient = gson.fromJson(messageFromClient,RequestClient.class);
-                ipAddress = requestClient.getIpAddress();
-                System.out.println("RequestClient processed: " + getTime());
                 System.out.println("Data from client " + messageFromClient);
                 if (requestClient.getRequestKey().equalsIgnoreCase(REQUEST_CONNECT_CLIENT)) {
-                    messageToClient = "Connection Accepted\n" + getTime();
-                    dataOutputStream.writeUTF(messageToClient);
-                    System.out.println("--Server response :" + messageToClient);
+                    messageToClient = "Connection Accepted\t" + getTime();
+                    sendMessage(messageToClient);
                 } else if (requestClient.getRequestKey().equalsIgnoreCase(FORWARDED_MESSAGE)){
                     messageToClient = "Connection Accepted\n" + requestClient.getMessage();
-                    dataOutputStream.writeUTF(messageToClient);
-                    System.out.println("client message:" + messageToClient);
+                    sendMessage(messageToClient);
                 }else if (requestClient.getRequestKey().equalsIgnoreCase(SEND_MESSAGE_CLIENT)){
                     requestClient.setRequestKey(FORWARDED_MESSAGE);
                     forwardMessage.onMessageReceived(this);
@@ -102,6 +107,24 @@ public class ManageUser implements Runnable {
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm dd-MM-yyyy", Locale.getDefault());
         Date resultdate = new Date(time);
         return sdf.format(resultdate);
+    }
+
+    private void sendMessage(String message) throws IOException {
+        ResponseToClient response = new ResponseToClient(true,"server","connection success");
+        Gson gson = new Gson();
+        dataOutputStream.writeUTF(gson.toJson(response));
+        System.out.println(message);
+    }
+
+    void sendMessage(RequestClient req){
+        ResponseToClient response = new ResponseToClient(true,req.getNickname(),req.getMessage());
+        Gson gson = new Gson();
+        try {
+            dataOutputStream.writeUTF(gson.toJson(response));
+            System.out.println(req.getNickname()+" to "+clientSocket.getInetAddress().getHostAddress()+"\nmessage\t:"+req.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     RequestClient getRequestClient() {

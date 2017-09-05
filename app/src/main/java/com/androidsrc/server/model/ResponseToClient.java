@@ -5,4 +5,37 @@ package com.androidsrc.server.model;
  */
 
 public class ResponseToClient {
+    private boolean success;
+    private String sender;
+    private String message;
+
+    public ResponseToClient(boolean success, String sender, String message) {
+        this.success = success;
+        this.sender = sender;
+        this.message = message;
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    public String getSender() {
+        return sender;
+    }
+
+    public void setSender(String sender) {
+        this.sender = sender;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }

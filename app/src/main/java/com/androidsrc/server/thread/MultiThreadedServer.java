@@ -18,14 +18,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MultiThreadedServer implements Runnable,ManageUser.forwardMessage {
+public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage {
 
     private int serverPort = 9000;
     private ServerSocket serverSocket = null;
     private boolean isStopped = false;
     private Thread runningThread = null;
 
-    private Map<String,ManageUser> clients = new HashMap<>();
+    private Map<String, ManageUser> clients = new HashMap<>();
 
 
     public MultiThreadedServer(int port) {
@@ -57,10 +57,10 @@ public class MultiThreadedServer implements Runnable,ManageUser.forwardMessage {
             client.setForwardMessage(this);
             new Thread(client).start();
             String id = client.getClientSocket().getInetAddress().getHostAddress();
-            if (id!=null)
-                clients.put(id,client);
+            if (id != null)
+                clients.put(id, client);
 
-            System.out.println("clients connected"+clients.toString());
+            System.out.println("clients connected" + clients.toString());
         }
         System.out.println("Server Stopped.");
     }
@@ -133,9 +133,10 @@ public class MultiThreadedServer implements Runnable,ManageUser.forwardMessage {
     public void onMessageReceived(ManageUser user) {
         RequestClient requestClient = user.getRequestClient();
         String destination = requestClient.getDestination();
-        ManageUser us= clients.get(destination);
-        if (us!=null)
-            new Thread(new messageThread(us.getClientSocket(),requestClient)).start();
+        ManageUser us = clients.get(destination);
+        if (us != null) {
+            us.sendMessage(requestClient);
+        }
         else
             System.out.println("null");
 
