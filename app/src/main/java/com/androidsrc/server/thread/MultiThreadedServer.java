@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage {
+public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage,ManageUser.onSocketClosed {
 
     private int serverPort = 9000;
     private ServerSocket serverSocket = null;
@@ -55,6 +55,7 @@ public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage 
             }
             ManageUser client = new ManageUser(clientSocket, "Multithreaded Server");
             client.setForwardMessage(this);
+            client.setOnSocketClosed(this);
             new Thread(client).start();
             String id = client.getClientSocket().getInetAddress().getHostAddress();
             if (id != null)
@@ -130,15 +131,30 @@ public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage 
 
 
     @Override
-    public void onMessageReceived(ManageUser user) {
+    public void onMessageReceived(ManageUser user, String id) {
         RequestClient requestClient = user.getRequestClient();
         String destination = requestClient.getDestination();
-        ManageUser us = clients.get(destination);
-        if (us != null) {
-            us.sendMessage(requestClient);
-        }
-        else
-            System.out.println("null");
+        ManageUser otherUser = clients.get(destination);
+        if (otherUser != null) {
+            boolean sent = otherUser.sendMessage(requestClient);
+            try {
+                user.sendMessageNotification(sent, id);
+            } catch (IOException e) {
+                e.printStackTrace();
 
+            }
+        } else
+            try {
+                user.sendMessageNotification(false, "");
+                System.out.print("No client with ip "+destination);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+    }
+
+    @Override
+    public void deleteMap(String key) {
+        clients.remove(key);
     }
 }

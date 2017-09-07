@@ -5,30 +5,32 @@ package com.androidsrc.server.thread;
  */
 
 
-import com.alibaba.fastjson.JSONPObject;
 import com.androidsrc.server.model.RequestClient;
 import com.androidsrc.server.model.ResponseToClient;
 import com.google.gson.Gson;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
+
+import static com.androidsrc.server.model.Constant.FORWARDED_MESSAGE;
+import static com.androidsrc.server.model.Constant.MESSAGE_DELIVERED;
+import static com.androidsrc.server.model.Constant.MESSAGE_FROM_OTHER;
+import static com.androidsrc.server.model.Constant.MESSAGE_RECEIVED_BY_SERVER;
+import static com.androidsrc.server.model.Constant.REQUEST_CONNECT_CLIENT;
+import static com.androidsrc.server.model.Constant.SEND_MESSAGE_CLIENT;
 
 /**
 
  */
 public class ManageUser implements Runnable {
-
-    private static final String REQUEST_CONNECT_CLIENT = "request-connect-client";
-    public static final String SEND_MESSAGE_CLIENT = "send-message-client";
-    public static final String FORWARDED_MESSAGE = "forwarded-message";
 
     private Socket clientSocket = null;
     private String serverText = null;
@@ -40,11 +42,17 @@ public class ManageUser implements Runnable {
     DataInputStream dataInputStream = null;
     DataOutputStream dataOutputStream = null;
 
-    interface forwardMessage{
-        void onMessageReceived(ManageUser user);
+    interface forwardMessage {
+        void onMessageReceived(ManageUser user, String idRequest);
     }
 
     private forwardMessage forwardMessage;
+
+    interface onSocketClosed {
+        void deleteMap(String key);
+    }
+
+    private onSocketClosed onSocketClosed;
 
 
     ManageUser(Socket clientSocket, String serverText) {
@@ -53,7 +61,7 @@ public class ManageUser implements Runnable {
     }
 
     public void run() {
-        while (!clientSocket.isClosed()) {
+        while (clientSocket.isConnected()&&!clientSocket.isClosed()) {
             try {
                 InputStream input = clientSocket.getInputStream();
                 OutputStream output = clientSocket.getOutputStream();
@@ -67,33 +75,36 @@ public class ManageUser implements Runnable {
 
                 //If no message sent from client, this code will block the program
                 try {
-                    if (dataInputStream==null)
+                    if (dataInputStream == null)
                         return;
                     messageFromClient = dataInputStream.readUTF();
-                }catch (Exception e){
+                } catch (EOFException e) {
+                    messageToClient = "EOFException" + e;
+                    dataOutputStream.writeUTF(messageToClient);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
                 Gson gson = new Gson();
-                requestClient = gson.fromJson(messageFromClient,RequestClient.class);
-                System.out.println("Data from client " + messageFromClient);
-                if (requestClient.getRequestKey().equalsIgnoreCase(REQUEST_CONNECT_CLIENT)) {
-                    messageToClient = "Connection Accepted\t" + getTime();
-                    sendMessage(messageToClient);
-                } else if (requestClient.getRequestKey().equalsIgnoreCase(FORWARDED_MESSAGE)){
-                    messageToClient = "Connection Accepted\n" + requestClient.getMessage();
-                    sendMessage(messageToClient);
-                }else if (requestClient.getRequestKey().equalsIgnoreCase(SEND_MESSAGE_CLIENT)){
-                    requestClient.setRequestKey(FORWARDED_MESSAGE);
-                    forwardMessage.onMessageReceived(this);
-                }
-            } catch (IOException e) {
+                requestClient = gson.fromJson(messageFromClient, RequestClient.class);
+                if (requestClient != null)
+                    if (requestClient.getRequestKey().equalsIgnoreCase(REQUEST_CONNECT_CLIENT)) {
+                        System.out.println("Client Request Connect" + messageFromClient);
+                        messageToClient = "Connection Accepted\t" + getTime();
+                        ACKMessage(true, messageToClient);
+                    } else if (requestClient.getRequestKey().equalsIgnoreCase(SEND_MESSAGE_CLIENT)) {
+//                    System.out.println("Client send message" + messageFromClient);
+                        forwardMessage.onMessageReceived(this, requestClient.getIdRequest());
+                    }
+            } catch (Exception e) {
                 //report exception somewhere.
                 e.printStackTrace();
                 System.out.println("IOException " + e);
                 try {
                     if (clientSocket != null)
                         clientSocket.close();
+                    ACKMessage(false, "socket closed");
+                    onSocketClosed.deleteMap(getClientSocket().getInetAddress().getHostAddress());
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
@@ -102,29 +113,43 @@ public class ManageUser implements Runnable {
         System.out.println("Connection closed");
     }
 
-    private String getTime(){
+    private String getTime() {
         long time = System.currentTimeMillis();
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm dd-MM-yyyy", Locale.getDefault());
         Date resultdate = new Date(time);
         return sdf.format(resultdate);
     }
 
-    private void sendMessage(String message) throws IOException {
-        ResponseToClient response = new ResponseToClient(true,"server","connection success");
+    private void ACKMessage(boolean success, String message) throws IOException {
+        ResponseToClient response = new ResponseToClient(success, "server", message, MESSAGE_RECEIVED_BY_SERVER);
         Gson gson = new Gson();
         dataOutputStream.writeUTF(gson.toJson(response));
         System.out.println(message);
     }
 
-    void sendMessage(RequestClient req){
-        ResponseToClient response = new ResponseToClient(true,req.getNickname(),req.getMessage());
+    void sendMessageNotification(boolean success, String id) throws IOException {
+        ResponseToClient response = new ResponseToClient(success, "server", "message delivered", MESSAGE_DELIVERED, id);
         Gson gson = new Gson();
-        try {
-            dataOutputStream.writeUTF(gson.toJson(response));
-            System.out.println(req.getNickname()+" to "+clientSocket.getInetAddress().getHostAddress()+"\nmessage\t:"+req.getMessage());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        dataOutputStream.writeUTF(gson.toJson(response));
+//        System.out.println(id);
+    }
+
+    boolean sendMessage(RequestClient req) {
+        ResponseToClient response = new ResponseToClient(true, req.getNickname(), req.getMessage(), MESSAGE_FROM_OTHER);
+        Gson gson = new Gson();
+        if (clientSocket.isClosed()) {
+            System.out.println("client closed");
+            return false;
+        } else
+            try {
+                dataOutputStream.writeUTF(gson.toJson(response));
+                System.out.println(req.getNickname() + "(" + req.getIpAddress() + ") -> " + clientSocket.getInetAddress().getHostAddress() + " :" + req.getMessage());
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                //System.out.print(e.getCause() + "");
+            }
+        return false;
     }
 
     RequestClient getRequestClient() {
@@ -158,5 +183,13 @@ public class ManageUser implements Runnable {
 
     public void setClientSocket(Socket clientSocket) {
         this.clientSocket = clientSocket;
+    }
+
+    public ManageUser.onSocketClosed getOnSocketClosed() {
+        return onSocketClosed;
+    }
+
+    public void setOnSocketClosed(ManageUser.onSocketClosed onSocketClosed) {
+        this.onSocketClosed = onSocketClosed;
     }
 }

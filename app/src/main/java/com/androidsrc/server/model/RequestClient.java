@@ -12,12 +12,14 @@ public class RequestClient {
     private String requestKey;
     @SerializedName("ipAddress")
     private String ipAddress;
-    @SerializedName("Message")
+    @SerializedName("message")
     private String message;
-    @SerializedName("Destination")
+    @SerializedName("destination")
     private String destination;
     @SerializedName("nickname")
     private String nickname;
+    @SerializedName("idRequest")
+    private String idRequest;
 
     public String getRequestKey() {
         return requestKey;
@@ -57,5 +59,13 @@ public class RequestClient {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public String getIdRequest() {
+        return idRequest;
+    }
+
+    public void setIdRequest(String idRequest) {
+        this.idRequest = idRequest;
     }
 }

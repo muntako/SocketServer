@@ -2,7 +2,7 @@ package com.androidsrc.server;
 
 import com.androidsrc.server.thread.MultiThreadedServer;
 
-public class echo3 {
+public class StartServer {
     public static void main(String args[]) {
 
         MultiThreadedServer server = new MultiThreadedServer(9000);
