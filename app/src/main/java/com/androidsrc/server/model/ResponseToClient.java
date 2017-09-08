@@ -9,8 +9,9 @@ public class ResponseToClient {
     private boolean success;
     private String sender;
     private String message;
-    private String status;
+    private String responseKey;
     private String idMessage;
+    private String ipAddressSender;
 
     public ResponseToClient(boolean success, String sender, String message) {
         this.success = success;
@@ -18,20 +19,22 @@ public class ResponseToClient {
         this.message = message;
     }
 
-    public ResponseToClient(boolean success, String sender, String message, String status) {
+    public ResponseToClient(boolean success, String sender, String message, String status, String idMessage, String ipAddressSender) {
         this.success = success;
         this.sender = sender;
         this.message = message;
-        this.status = status;
+        this.responseKey = status;
+        this.idMessage = idMessage;
+        this.ipAddressSender = ipAddressSender;
     }
 
-    public ResponseToClient(boolean success, String sender, String message, String status, String idMessage) {
-        this.success = success;
-        this.sender = sender;
-        this.message = message;
-        this.status = status;
-        this.idMessage = idMessage;
-    }
+//    public ResponseToClient(boolean success, String sender, String message, String status, String idMessage) {
+//        this.success = success;
+//        this.sender = sender;
+//        this.message = message;
+//        this.status = status;
+//        this.idMessage = idMessage;
+//    }
 
     public boolean isSuccess() {
         return success;
@@ -58,11 +61,11 @@ public class ResponseToClient {
     }
 
     public String getStatus() {
-        return status;
+        return responseKey;
     }
 
     public void setStatus(String status) {
-        this.status = status;
+        this.responseKey = status;
     }
 
     public String getIdMessage() {
@@ -71,5 +74,13 @@ public class ResponseToClient {
 
     public void setIdMessage(String idMessage) {
         this.idMessage = idMessage;
+    }
+
+    public String getIpAddressSender() {
+        return ipAddressSender;
+    }
+
+    public void setIpAddressSender(String ipAddressSender) {
+        this.ipAddressSender = ipAddressSender;
     }
 }

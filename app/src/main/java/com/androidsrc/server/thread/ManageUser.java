@@ -23,6 +23,7 @@ import java.util.Locale;
 import static com.androidsrc.server.model.Constant.FORWARDED_MESSAGE;
 import static com.androidsrc.server.model.Constant.MESSAGE_DELIVERED;
 import static com.androidsrc.server.model.Constant.MESSAGE_FROM_OTHER;
+import static com.androidsrc.server.model.Constant.MESSAGE_HAS_BEEN_READ;
 import static com.androidsrc.server.model.Constant.MESSAGE_RECEIVED_BY_SERVER;
 import static com.androidsrc.server.model.Constant.REQUEST_CONNECT_CLIENT;
 import static com.androidsrc.server.model.Constant.SEND_MESSAGE_CLIENT;
@@ -46,6 +47,12 @@ public class ManageUser implements Runnable {
         void onMessageReceived(ManageUser user, String idRequest);
     }
 
+    public interface hasBeenRead {
+        void onRead(ManageUser user, String idRequest);
+    }
+
+    private hasBeenRead hasBeenRead;
+
     private forwardMessage forwardMessage;
 
     interface onSocketClosed {
@@ -61,7 +68,7 @@ public class ManageUser implements Runnable {
     }
 
     public void run() {
-        while (clientSocket.isConnected()&&!clientSocket.isClosed()) {
+        while (clientSocket.isConnected() && !clientSocket.isClosed()) {
             try {
                 InputStream input = clientSocket.getInputStream();
                 OutputStream output = clientSocket.getOutputStream();
@@ -87,15 +94,18 @@ public class ManageUser implements Runnable {
 
                 Gson gson = new Gson();
                 requestClient = gson.fromJson(messageFromClient, RequestClient.class);
-                if (requestClient != null)
+                if (requestClient != null) {
+                    System.out.println(messageFromClient);
                     if (requestClient.getRequestKey().equalsIgnoreCase(REQUEST_CONNECT_CLIENT)) {
-                        System.out.println("Client Request Connect" + messageFromClient);
+                        System.out.println("Client Request Connect\t" + messageFromClient);
                         messageToClient = "Connection Accepted\t" + getTime();
                         ACKMessage(true, messageToClient);
                     } else if (requestClient.getRequestKey().equalsIgnoreCase(SEND_MESSAGE_CLIENT)) {
-//                    System.out.println("Client send message" + messageFromClient);
                         forwardMessage.onMessageReceived(this, requestClient.getIdRequest());
+                    } else if (requestClient.getRequestKey().equalsIgnoreCase(MESSAGE_HAS_BEEN_READ)) {
+                        hasBeenRead.onRead(this, requestClient.getIdRequest());
                     }
+                }
             } catch (Exception e) {
                 //report exception somewhere.
                 e.printStackTrace();
@@ -121,21 +131,21 @@ public class ManageUser implements Runnable {
     }
 
     private void ACKMessage(boolean success, String message) throws IOException {
-        ResponseToClient response = new ResponseToClient(success, "server", message, MESSAGE_RECEIVED_BY_SERVER);
+        ResponseToClient response = new ResponseToClient(success, "server", message, MESSAGE_RECEIVED_BY_SERVER, "", getIpAddress());
         Gson gson = new Gson();
         dataOutputStream.writeUTF(gson.toJson(response));
         System.out.println(message);
     }
 
     void sendMessageNotification(boolean success, String id) throws IOException {
-        ResponseToClient response = new ResponseToClient(success, "server", "message delivered", MESSAGE_DELIVERED, id);
+        ResponseToClient response = new ResponseToClient(success, "server", "message delivered", MESSAGE_DELIVERED, id, getIpAddress());
         Gson gson = new Gson();
         dataOutputStream.writeUTF(gson.toJson(response));
-//        System.out.println(id);
     }
 
-    boolean sendMessage(RequestClient req) {
-        ResponseToClient response = new ResponseToClient(true, req.getNickname(), req.getMessage(), MESSAGE_FROM_OTHER);
+    boolean sendMessage(RequestClient req, String key) {
+        ResponseToClient response = new ResponseToClient(true, req.getNickname(), req.getMessage(),
+                key, req.getIdRequest(), req.getIpAddress());
         Gson gson = new Gson();
         if (clientSocket.isClosed()) {
             System.out.println("client closed");
@@ -147,7 +157,6 @@ public class ManageUser implements Runnable {
                 return true;
             } catch (IOException e) {
                 e.printStackTrace();
-                //System.out.print(e.getCause() + "");
             }
         return false;
     }
@@ -191,5 +200,13 @@ public class ManageUser implements Runnable {
 
     public void setOnSocketClosed(ManageUser.onSocketClosed onSocketClosed) {
         this.onSocketClosed = onSocketClosed;
+    }
+
+    public ManageUser.hasBeenRead getHasBeenRead() {
+        return hasBeenRead;
+    }
+
+    public void setHasBeenRead(ManageUser.hasBeenRead hasBeenRead) {
+        this.hasBeenRead = hasBeenRead;
     }
 }

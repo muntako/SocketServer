@@ -68,4 +68,9 @@ public class RequestClient {
     public void setIdRequest(String idRequest) {
         this.idRequest = idRequest;
     }
+
+    @Override
+    public String toString() {
+        return "IP Address "+ ipAddress+" key "+requestKey+" destintion "+destination;
+    }
 }

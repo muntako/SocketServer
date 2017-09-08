@@ -13,4 +13,6 @@ public class Constant {
     public static final String MESSAGE_DELIVERED            = "message-delivered";
     public static final String MESSAGE_RECEIVED_BY_SERVER   = "message-received-by-server";
     public static final String MESSAGE_FROM_OTHER           = "message-from-other";
+
+    public static final String MESSAGE_HAS_BEEN_READ        = "message-has-been-read";
 }

@@ -4,6 +4,7 @@ package com.androidsrc.server.thread;
  * Created by ADMIN on 31-Aug-17.
  */
 
+import com.androidsrc.server.model.Constant;
 import com.androidsrc.server.model.RequestClient;
 
 import java.net.InetAddress;
@@ -18,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage,ManageUser.onSocketClosed {
+public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage,ManageUser.onSocketClosed, ManageUser.hasBeenRead {
 
     private int serverPort = 9000;
     private ServerSocket serverSocket = null;
@@ -56,6 +57,7 @@ public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage,
             ManageUser client = new ManageUser(clientSocket, "Multithreaded Server");
             client.setForwardMessage(this);
             client.setOnSocketClosed(this);
+            client.setHasBeenRead(this);
             new Thread(client).start();
             String id = client.getClientSocket().getInetAddress().getHostAddress();
             if (id != null)
@@ -136,12 +138,11 @@ public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage,
         String destination = requestClient.getDestination();
         ManageUser otherUser = clients.get(destination);
         if (otherUser != null) {
-            boolean sent = otherUser.sendMessage(requestClient);
+            boolean sent = otherUser.sendMessage(requestClient,Constant.MESSAGE_FROM_OTHER);
             try {
                 user.sendMessageNotification(sent, id);
             } catch (IOException e) {
                 e.printStackTrace();
-
             }
         } else
             try {
@@ -150,11 +151,28 @@ public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage,
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
     }
 
     @Override
     public void deleteMap(String key) {
         clients.remove(key);
+    }
+
+    @Override
+    public void onRead(ManageUser user, String idRequest) {
+        RequestClient requestClient = user.getRequestClient();
+        String destination = requestClient.getDestination();
+        ManageUser otherUser = clients.get(destination);
+        if (otherUser != null) {
+            otherUser.sendMessage(requestClient, Constant.MESSAGE_HAS_BEEN_READ);
+        }
+//        else
+//            try {
+//                user.sendMessageNotification(false, "");
+//                System.out.print("No client with ip "+destination);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+
     }
 }
