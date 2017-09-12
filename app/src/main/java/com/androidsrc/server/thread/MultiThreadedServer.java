@@ -146,7 +146,7 @@ public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage,
             }
         } else
             try {
-                user.sendMessageNotification(false, "");
+                user.sendMessageNotification(false, id);
                 System.out.print("No client with ip "+destination);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -154,7 +154,7 @@ public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage,
     }
 
     @Override
-    public void deleteMap(String key) {
+    public void deleteMap(ManageUser user,String key) {
         clients.remove(key);
     }
 
@@ -166,13 +166,5 @@ public class MultiThreadedServer implements Runnable, ManageUser.forwardMessage,
         if (otherUser != null) {
             otherUser.sendMessage(requestClient, Constant.MESSAGE_HAS_BEEN_READ);
         }
-//        else
-//            try {
-//                user.sendMessageNotification(false, "");
-//                System.out.print("No client with ip "+destination);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-
     }
 }

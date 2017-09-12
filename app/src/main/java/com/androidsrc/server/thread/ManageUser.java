@@ -2,6 +2,7 @@ package com.androidsrc.server.thread;
 
 /**
  * Created by ADMIN on 31-Aug-17.
+ *
  */
 
 
@@ -56,7 +57,7 @@ public class ManageUser implements Runnable {
     private forwardMessage forwardMessage;
 
     interface onSocketClosed {
-        void deleteMap(String key);
+        void deleteMap(ManageUser user,String key);
     }
 
     private onSocketClosed onSocketClosed;
@@ -90,6 +91,7 @@ public class ManageUser implements Runnable {
                     dataOutputStream.writeUTF(messageToClient);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    disconnect();
                 }
 
                 Gson gson = new Gson();
@@ -97,7 +99,6 @@ public class ManageUser implements Runnable {
                 if (requestClient != null) {
                     System.out.println(messageFromClient);
                     if (requestClient.getRequestKey().equalsIgnoreCase(REQUEST_CONNECT_CLIENT)) {
-                        System.out.println("Client Request Connect\t" + messageFromClient);
                         messageToClient = "Connection Accepted\t" + getTime();
                         ACKMessage(true, messageToClient);
                     } else if (requestClient.getRequestKey().equalsIgnoreCase(SEND_MESSAGE_CLIENT)) {
@@ -110,17 +111,22 @@ public class ManageUser implements Runnable {
                 //report exception somewhere.
                 e.printStackTrace();
                 System.out.println("IOException " + e);
-                try {
-                    if (clientSocket != null)
-                        clientSocket.close();
-                    ACKMessage(false, "socket closed");
-                    onSocketClosed.deleteMap(getClientSocket().getInetAddress().getHostAddress());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
+                disconnect();
+
             }
         }
         System.out.println("Connection closed");
+    }
+
+    private void disconnect(){
+        try {
+            if (clientSocket != null)
+                clientSocket.close();
+            ACKMessage(false, "socket closed");
+            onSocketClosed.deleteMap(this,getClientSocket().getInetAddress().getHostAddress());
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
     }
 
     private String getTime() {
@@ -131,7 +137,7 @@ public class ManageUser implements Runnable {
     }
 
     private void ACKMessage(boolean success, String message) throws IOException {
-        ResponseToClient response = new ResponseToClient(success, "server", message, MESSAGE_RECEIVED_BY_SERVER, "", getIpAddress());
+        ResponseToClient response = new ResponseToClient(success, "server", message, REQUEST_CONNECT_CLIENT, "", getIpAddress());
         Gson gson = new Gson();
         dataOutputStream.writeUTF(gson.toJson(response));
         System.out.println(message);
@@ -178,7 +184,7 @@ public class ManageUser implements Runnable {
         this.forwardMessage = forwardMessage;
     }
 
-    String getIpAddress() {
+    private String getIpAddress() {
         return ipAddress;
     }
 
@@ -186,7 +192,7 @@ public class ManageUser implements Runnable {
         this.ipAddress = ipAddress;
     }
 
-    public Socket getClientSocket() {
+    Socket getClientSocket() {
         return clientSocket;
     }
 
@@ -198,7 +204,7 @@ public class ManageUser implements Runnable {
         return onSocketClosed;
     }
 
-    public void setOnSocketClosed(ManageUser.onSocketClosed onSocketClosed) {
+    void setOnSocketClosed(ManageUser.onSocketClosed onSocketClosed) {
         this.onSocketClosed = onSocketClosed;
     }
 
@@ -206,7 +212,9 @@ public class ManageUser implements Runnable {
         return hasBeenRead;
     }
 
-    public void setHasBeenRead(ManageUser.hasBeenRead hasBeenRead) {
+    void setHasBeenRead(ManageUser.hasBeenRead hasBeenRead) {
         this.hasBeenRead = hasBeenRead;
     }
+
+
 }
